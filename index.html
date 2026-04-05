@@ -160,28 +160,73 @@
             background: white;
             max-width: 700px;
             width: 90%;
-            padding: 45px 35px;
+            padding: 40px 30px;
             border-radius: 24px;
             text-align: left;
             max-height: 90vh;
             overflow-y: auto;
         }
-        .score {
-            font-size: 20px;
-            margin: 8px 0;
-            color: #2c3e50;
+
+        /* 报告美化样式（核心优化） */
+        .report-block {
+            background: #fafbff;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin: 12px 0;
+            border-left: 4px solid #5F4B8B;
         }
-        .score span {
-            font-size: 32px;
-            color: #5F4B8B;
+        .report-score {
+            font-size: 22px;
             font-weight: bold;
+            color: #5F4B8B;
+            margin-bottom: 8px;
         }
-        #resultText {
+        .report-level {
             font-size: 16px;
-            line-height: 1.8;
-            margin: 20px 0;
-            color: #333;
-            white-space: pre-line;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        .report-desc {
+            font-size: 15px;
+            color: #444;
+            line-height: 1.6;
+        }
+        .report-tip {
+            font-size: 14px;
+            color: #666;
+            background: #f0f2ff;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-top: 8px;
+        }
+        .report-end {
+            text-align: center;
+            font-size: 15px;
+            color: #5F4B8B;
+            font-weight: 500;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+        .score-panel {
+            display: flex;
+            gap: 20px;
+            margin: 10px 0 20px;
+        }
+        .score-item {
+            flex: 1;
+            background: #f8f9ff;
+            padding: 16px;
+            border-radius: 16px;
+            text-align: center;
+        }
+        .score-num {
+            font-size: 32px;
+            font-weight: bold;
+            color: #5F4B8B;
+        }
+        .score-label {
+            font-size: 14px;
+            color: #666;
         }
     </style>
 </head>
@@ -192,10 +237,21 @@
 
 <div class="modal" id="modal">
     <div class="modal-content" id="reportCard">
-        <h2 style="color:#5F4B8B; margin-bottom:20px;">你的专属心理行为报告</h2>
-        <div class="score">孤独感指数：<span id="score1">0</span></div>
-        <div class="score">假性亲密指数：<span id="score2">0</span></div>
-        <div id="resultText"></div>
+        <h2 style="color:#5F4B8B; text-align:center; margin-bottom:20px;">你的专属心理报告</h2>
+        
+        <div class="score-panel">
+            <div class="score-item">
+                <div class="score-num" id="score1">0</div>
+                <div class="score-label">孤独感指数</div>
+            </div>
+            <div class="score-item">
+                <div class="score-num" id="score2">0</div>
+                <div class="score-label">假性亲密指数</div>
+            </div>
+        </div>
+
+        <div id="resultText" style="font-size:15px; line-height:1.6;"></div>
+
         <button class="btn save-btn" onclick="saveReport()">保存报告图片</button>
         <button class="btn prev" onclick="closeModal()" style="margin-top:10px;">关闭</button>
     </div>
@@ -204,7 +260,6 @@
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// 题目：17题（15+2定义）
 const questions = [
   { q: "身边没有真正懂我的人", type: "lonely", name: "q1" },
   { q: "身处人群仍感到孤独", type: "lonely", name: "q2" },
@@ -225,10 +280,8 @@ const questions = [
   { q: "你认为假性亲密是什么？", type: "belief", name: "belief_fake" },
 ];
 
-// 随机打乱
 const shuffled = [...questions].sort(() => Math.random() - 0.5);
 
-// 基础信息
 const basicSlides = [
   { title: "1. 性别", options: ["男","女"], name: "gender" },
   { title: "2. 年级", options: ["大一","大二","大三","大四","研究生"], name: "grade" },
@@ -238,25 +291,22 @@ const basicSlides = [
   { title: "6. 家庭亲密程度", options: ["极高，无话不谈","较高，经常沟通","一般，偶尔联系","较低，疏远"], name: "family" },
 ];
 
-// 生成页面
 const slider = document.getElementById('slider');
 let html = '';
 
-// 开始页
 html += `
 <div class="slide">
   <div class="card">
     <div class="start-title">认识你自己 · 解锁真实联结</div>
     <div class="start-desc">
-    你是否有过这样的时刻？身处喧闹的宿舍、热闹的社团，却依然觉得“没人懂我”；拥有很多“好友”，却找不到一个可以毫无保留倾诉心事的人；看似融入集体，内心却始终隔着一层距离……<br><br>
-    这份问卷是心理健康课程调研，更是一次自我探索的机会——帮你看清人际交往状态，读懂内心的孤独与困惑，解锁真实、舒适的亲密关系❤️<br><br>
-    每一个选择，都是你了解自己的一步。感谢你的真诚参与！</div>
+    你是否身处人群却倍感孤独？有很多朋友却无法交心？<br><br>
+    这是一份专业心理评估，帮你看清孤独与假性亲密，遇见更真实的自己❤️
+    </div>
     <div style="height:20px;"></div>
     <button class="btn start-btn" onclick="nextSlide()">开始测试 →</button>
   </div>
 </div>`;
 
-// 基础信息页
 basicSlides.forEach(item => {
   html += `
 <div class="slide">
@@ -275,12 +325,11 @@ basicSlides.forEach(item => {
 </div>`;
 });
 
-// 17题随机页
 shuffled.forEach((item, i) => {
   if (item.name.startsWith('belief')) {
     const opts = item.name === 'belief_lonely' 
-      ? ["只是没人陪", "情感需求未被满足的痛苦", "性格内向", "正常的人生状态"]
-      : ["关系很好只是话少", "表面亲近但内心疏远", "相处舒服就行", "正常社交"];
+      ? ["只是没人陪", "情感需求未被满足", "性格内向", "正常状态"]
+      : ["关系好但话少", "表面亲近内心疏远", "相处舒服即可", "正常社交"];
     html += `
 <div class="slide">
   <div class="card">
@@ -315,7 +364,6 @@ shuffled.forEach((item, i) => {
   }
 });
 
-// 提交页
 html += `
 <div class="slide">
   <div class="card">
@@ -329,7 +377,6 @@ html += `
 
 slider.innerHTML = html;
 
-// 滑动逻辑
 let currentSlide = 0;
 const slides = document.querySelectorAll('.slide');
 const total = slides.length;
@@ -351,14 +398,12 @@ function prevSlide() {
   updateProgress();
 }
 
-// 选完自动下一题
 document.querySelectorAll('input[type="radio"]').forEach(i => {
   i.addEventListener('change', () => {
     setTimeout(nextSlide, 300);
   });
 });
 
-// Supabase
 const sb = supabase.createClient(
   "https://dbaiyejeplerltfavghd.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiYWl5ZWplcGxlcmx0ZmF2Z2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNjQyMjQsImV4cCI6MjA5MDk0MDIyNH0.mcxFJ353pNgptNHej3wT5qDl1_WxU3KQM_J41n54KVg"
@@ -391,52 +436,72 @@ async function submitTest() {
     return;
   }
 
-  genReport(lonely, fake, data.belief_lonely, data.belief_fake, data.grade);
+  genReport(lonely, fake, data.belief_lonely, data.belief_fake);
   document.getElementById("modal").style.display = "flex";
 }
 
-function genReport(s1, s2, ans_lonely, ans_fake, grade) {
+// ===================== 核心：美化版报告（精简+设计感）=====================
+function genReport(s1, s2, ans_lonely, ans_fake) {
   let txt = '';
-    txt += "你认为孤独是：" + ans_lonely + "\n";
-  txt += "【你的孤独感指数】" + s1 + "（满分25分）\n";
+
+  // 孤独模块
+  txt += `<div class="report-block">`;
+  txt += `<div class="report-score">🌫 孤独感指数 ${s1}/25</div>`;
   if (s1 <= 10) {
-    txt += "✅ 低孤独状态｜你的心理状态较为稳定，有良好的情感联结能力，能够主动建立或维系深度关系，不易陷入情感孤立。\n";
-    txt += "→ 心理发展建议：继续保持开放心态，在忙碌的学习中保留与挚友的深度沟通，同时可尝试带动身边有孤独感的同学，传递积极能量。\n";
+    txt += `<div class="report-level">✅ 低孤独｜内心稳定，联结良好</div>`;
+    txt += `<div class="report-desc">你能建立真实关系，不易陷入孤立。</div>`;
+    txt += `<div class="report-tip">保持开放，多与挚友深度交流即可。</div>`;
   } else if (s1 <= 18) {
-    txt += "⚠️ 中度孤独状态｜你偶尔会感到孤独，尤其在压力大、社交疲惫时，容易陷入内心封闭，有倾诉需求但不愿主动表达。\n";
-    txt += "→ 困境处理建议：1.不必强迫自己合群，优先选择1-2个信任的人分享情绪；2.参加兴趣社团，找到同频伙伴；3.区分独处与孤独，学会主动求助。\n";
+    txt += `<div class="report-level">⚠️ 中度孤独｜偶尔封闭，渴望靠近</div>`;
+    txt += `<div class="report-desc">压力大时易孤独，有倾诉欲但不敢表达。</div>`;
+    txt += `<div class="report-tip">找1-2个信任的人分享情绪，不必强迫合群。</div>`;
   } else {
-    txt += "🔴 高孤独状态｜你长期处于情感隔离状态，习惯隐藏心事、自我封闭，学习与社交压力可能加剧了孤独感，内心需求长期未被满足。\n";
-    txt += "→ 困境处理建议：1.孤独是正常信号，不是性格缺陷；2.从微小互动开始，建立轻松日常联结；3.减少手机逃避，培养兴趣打破封闭；4.必要时寻求学校心理咨询支持。\n";
+    txt += `<div class="report-level">🔴 高孤独｜长期隔离，内心缺爱</div>`;
+    txt += `<div class="report-desc">习惯隐藏自己，情感需求长期未被满足。</div>`;
+    txt += `<div class="report-tip">从小互动开始打破封闭，必要时寻求心理咨询。</div>`;
   }
+  txt += `</div>`;
 
-txt += "你认为假性亲密是：" + ans_fake + "\n\n";
-txt += "🔹假性亲密：在宿舍、社团、班级中常见的“表面和谐”关系——互动频繁、礼貌周到，但内心设防，不暴露真实情绪与脆弱，靠寒暄、任务式交往维持，无深层情感流动。\n\n";
-
-  txt += "\n【你的假性亲密指数】" + s2 + "（满分30分）\n";
+  // 假性亲密模块
+  txt += `<div class="report-block">`;
+  txt += `<div class="report-score">🎭 假性亲密指数 ${s2}/30</div>`;
   if (s2 <= 12) {
-    txt += "✅ 低假性亲密状态｜你在交往中能够保持真诚，敢于展现真实的自己，不刻意迎合他人，能建立高质量深度关系。\n";
-    txt += "→ 心理发展建议：继续保持真诚，同时尊重他人边界，避免因过度真诚产生不必要的内耗。\n";
+    txt += `<div class="report-level">✅ 低假性｜真诚坦荡，关系高质量</div>`;
+    txt += `<div class="report-desc">你敢于做自己，不迎合、不伪装。</div>`;
+    txt += `<div class="report-tip">继续真诚，同时守住边界。</div>`;
   } else if (s2 <= 22) {
-    txt += "⚠️ 中度假性亲密状态｜你存在一定的表面社交倾向，偶尔会隐藏想法迎合他人，在集体中习惯用礼貌维持关系，内心存在距离感。\n";
-    txt += "→ 困境处理建议：1.减少无效社交，专注维系值得的关系；2.在信任的人面前尝试表达真实想法；3.不必强迫自己参与所有活动。\n";
+    txt += `<div class="report-level">⚠️ 中度假性｜表面社交，内心有距</div>`;
+    txt += `<div class="report-desc">偶尔隐藏想法，用礼貌维持关系。</div>`;
+    txt += `<div class="report-tip">减少无效社交，对信任的人更真实一点。</div>`;
   } else {
-    txt += "🔴 高假性亲密状态｜你长期习惯社交伪装，内心高度设防，不愿暴露脆弱，害怕被伤害，关系大多停留在表面，难以建立深度联结。\n";
-    txt += "→ 困境处理建议：1.接纳自我保护的本能，不必自责；2.从微小情绪分享开始，逐步建立信任；3.减少功利社交，把精力留给自己；4.长期疲惫可寻求专业心理支持。\n";
+    txt += `<div class="report-level">🔴 高假性｜长期戴面具，不敢 vulnerability</div>`;
+    txt += `<div class="report-desc">极度设防，关系停在表面，难以深交。</div>`;
+    txt += `<div class="report-tip">允许自己脆弱，从微小分享开始重建信任。</div>`;
   }
+  txt += `</div>`;
 
-  txt += "\n【专属心理发展建议】\n";
-  txt += "1. 学习与社交平衡：不必追求完美社交，合理分配时间，每周保留1-2小时深度沟通。\n";
-  txt += "2. 善用校园资源：学校心理咨询中心可提供免费支持，兴趣社团是寻找同频伙伴的优质渠道。\n";
-  txt += "3. 调整认知：孤独与假性亲密都是成长中的正常现象，关键是正视自己的真实需求。\n";
-  txt += "4. 从小行动开始：每天做一件打破封闭的小事，逐步建立自然、舒适的情感联结。\n";
-  txt += "5. 关注自我成长：接纳自己的不完美，允许有困惑与情绪，在自我探索中成为更从容的自己。\n";
+  // 你的理解
+  txt += `<div class="report-block" style="background:#f0f7ff; border-left-color:#4a90e2;">`;
+  txt += `<div class="report-level">💬 你的认知</div>`;
+  txt += `<div class="report-desc">• 你理解的孤独：${ans_lonely}</div>`;
+  txt += `<div class="report-desc">• 你理解的假性亲密：${ans_fake}</div>`;
+  txt += `</div>`;
 
-  txt += "\n 致每一个努力的你：每一次自我探索，都在让你靠近更真实的自己。愿你在大学时光里，既能专注成长，也能拥有温暖真诚的关系，不必伪装，不必孤立，自在从容，闪闪发光✨";
+  // 简短建议
+  txt += `<div class="report-block">`;
+  txt += `<div class="report-level">✨ 成长建议</div>`;
+  txt += `<div class="report-desc">1. 每周留1次深度聊天<br>`;
+  txt += `2. 不必讨好，做自己就好<br>`;
+  txt += `3. 孤独不是错，是需要被看见<br>`;
+  txt += `4. 从小行动打破封闭，慢慢来</div>`;
+  txt += `</div>`;
+
+  // 结尾
+  txt += `<div class="report-end">愿你不必伪装，也能被温柔接住✨</div>`;
 
   document.getElementById("score1").innerText = s1;
   document.getElementById("score2").innerText = s2;
-  document.getElementById("resultText").innerText = txt;
+  document.getElementById("resultText").innerHTML = txt;
 }
 
 function closeModal() {
