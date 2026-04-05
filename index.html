@@ -358,7 +358,7 @@ document.querySelectorAll('input[type="radio"]').forEach(i => {
 });
 
 // ========== 在这里替换成你的 Supabase 信息 ==========
-const supabase = supabase.createClient(
+const sb = supabase.createClient(
   "https://dbaiyejeplerltfavghd.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiYWl5ZWplcGxlcmx0ZmF2Z2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNjQyMjQsImV4cCI6MjA5MDk0MDIyNH0.mcxFJ353pNgptNHej3wT5qDl1_WxU3KQM_J41n54KVg"
 );
@@ -388,7 +388,7 @@ async function submitTest() {
   data.submit_time = new Date().toISOString();
 
   // 上传
-  const { error } = await supabase.from("survey_full").insert([data]);
+  const { error } = await sb.from("survey_full").insert([data]);
   if (error) {
     console.error(error);
     alert("提交失败：" + error.message);
