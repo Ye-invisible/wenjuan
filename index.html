@@ -221,7 +221,6 @@ const questions = [
   { q: "心情不好独自消化不找人说", type: "act", name: "act2" },
   { q: "不想社交仍勉强参加怕尴尬", type: "act", name: "act3" },
   { q: "朋友倾诉我礼貌敷衍", type: "act", name: "act4" },
-  // 新增2题
   { q: "你认为孤独是什么？", type: "belief", name: "belief_lonely" },
   { q: "你认为假性亲密是什么？", type: "belief", name: "belief_fake" },
 ];
@@ -249,7 +248,10 @@ html += `
   <div class="card">
     <div class="start-title">认识你自己 · 解锁真实联结</div>
     <div class="start-desc">孤独感 × 假性亲密 × 行为模式综合评估</div>
-    <div class="start-desc">全程匿名｜专业报告｜数据云端存储</div>
+    <div class="start-desc">亲爱的同学：<br>
+    你是否有过这样的时刻？身处喧闹的宿舍、热闹的社团，却依然觉得“没人懂我”；拥有很多“好友”，却找不到一个可以毫无保留倾诉心事的人；看似融入集体，内心却始终隔着一层距离……<br><br>
+    这份问卷是心理健康课程调研，更是一次自我探索的机会——帮你看清人际交往状态，读懂内心的孤独与困惑，解锁真实、舒适的亲密关系❤️<br><br>
+    每一个选择，都是你了解自己的一步。感谢你的真诚参与！</div>
     <div style="height:20px;"></div>
     <button class="btn start-btn" onclick="nextSlide()">开始测试 →</button>
   </div>
@@ -278,7 +280,7 @@ basicSlides.forEach(item => {
 shuffled.forEach((item, i) => {
   if (item.name.startsWith('belief')) {
     const opts = item.name === 'belief_lonely' 
-      ? ["只是没人陪", "情感需求未被满足的痛苦", "性格内向", "想太多"]
+      ? ["只是没人陪", "情感需求未被满足的痛苦", "性格内向", "正常的人生状态"]
       : ["关系很好只是话少", "表面亲近但内心疏远", "相处舒服就行", "正常社交"];
     html += `
 <div class="slide">
@@ -357,23 +359,20 @@ document.querySelectorAll('input[type="radio"]').forEach(i => {
   });
 });
 
-// ========== 在这里替换成你的 Supabase 信息 ==========
+// Supabase
 const sb = supabase.createClient(
   "https://dbaiyejeplerltfavghd.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiYWl5ZWplcGxlcmx0ZmF2Z2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNjQyMjQsImV4cCI6MjA5MDk0MDIyNH0.mcxFJ353pNgptNHej3wT5qDl1_WxU3KQM_J41n54KVg"
 );
-// ===================================================
 
 async function submitTest() {
   const data = {};
   let lonely = 0, fake = 0;
 
-  // 读取基础信息
   basicSlides.forEach(b => {
     data[b.name] = document.querySelector(`input[name="info_${b.name}"]:checked`)?.value || "未填写";
   });
 
-  // 读取所有题目
   for (const q of questions) {
     const val = document.querySelector(`input[name="${q.name}"]:checked`)?.value;
     if (!val) return alert("请完成所有题目");
@@ -382,12 +381,10 @@ async function submitTest() {
     if (q.type === "fake") fake += Number(val);
   }
 
-  // 总分
   data.loneliness_score = lonely;
   data.fake_intimacy_score = fake;
   data.submit_time = new Date().toISOString();
 
-  // 上传
   const { error } = await sb.from("survey_full").insert([data]);
   if (error) {
     console.error(error);
@@ -395,38 +392,54 @@ async function submitTest() {
     return;
   }
 
-  // 生成报告
-  genReport(lonely, fake, data.belief_lonely, data.belief_fake);
+  genReport(lonely, fake, data.belief_lonely, data.belief_fake, data.grade);
   document.getElementById("modal").style.display = "flex";
 }
 
-// 报告（含定义解答）
-function genReport(s1, s2, ans_lonely, ans_fake) {
+// 报告生成（完全通用大学生版，无任何清华内容）
+function genReport(s1, s2, ans_lonely, ans_fake, grade) {
   let txt = '';
-  txt += "📌 你的理解\n";
+
+  txt += "📌 你的心理认知\n";
   txt += "• 你认为孤独是：" + ans_lonely + "\n";
   txt += "• 你认为假性亲密是：" + ans_fake + "\n\n";
 
-  txt += "🧠【专业定义解答】\n";
-  txt += "🔹孤独：不是没人陪，而是「情感联结缺失」——渴望被理解、被看见，但需求长期未被满足。\n";
-  txt += "🔹假性亲密：表面熟络、互动频繁，但内心设防、无真实情感流动，靠礼貌与敷衍维持。\n\n";
+  txt += "🧠【专业心理定义】\n";
+  txt += "🔹孤独：并非“独处”，而是大学生在学习压力、社交环境中，依然存在的「情感联结缺失」——渴望被理解、被看见，却因学业忙碌、社交壁垒、自我设防等原因，导致心理需求长期未被满足。\n";
+  txt += "🔹假性亲密：在宿舍、社团、班级中常见的“表面和谐”关系——互动频繁、礼貌周到，但内心设防，不暴露真实情绪与脆弱，靠寒暄、任务式交往维持，无深层情感流动。\n\n";
 
-  txt += "📊【孤独感指数】" + s1 + "\n";
-  if (s1 <= 14) txt += "✅ 低孤独｜内心稳定，有安全感\n";
-  else if (s1 <= 24) txt += "⚠️ 中度孤独｜偶尔封闭，渴望深度联结\n";
-  else txt += "🔴 高孤独｜长期情感隔离，内心脆弱\n";
+  txt += "📊【你的孤独感指数】" + s1 + "（满分25分）\n";
+  if (s1 <= 10) {
+    txt += "✅ 低孤独状态｜你的心理状态较为稳定，有良好的情感联结能力，能够主动建立或维系深度关系，不易陷入情感孤立。\n";
+    txt += "→ 心理发展建议：继续保持开放心态，在忙碌的学习中保留与挚友的深度沟通，同时可尝试带动身边有孤独感的同学，传递积极能量。\n";
+  } else if (s1 <= 18) {
+    txt += "⚠️ 中度孤独状态｜你偶尔会感到孤独，尤其在压力大、社交疲惫时，容易陷入内心封闭，有倾诉需求但不愿主动表达。\n";
+    txt += "→ 困境处理建议：1.不必强迫自己合群，优先选择1-2个信任的人分享情绪；2.参加兴趣社团，找到同频伙伴；3.区分独处与孤独，学会主动求助。\n";
+  } else {
+    txt += "🔴 高孤独状态｜你长期处于情感隔离状态，习惯隐藏心事、自我封闭，学习与社交压力可能加剧了孤独感，内心需求长期未被满足。\n";
+    txt += "→ 困境处理建议：1.孤独是正常信号，不是性格缺陷；2.从微小互动开始，建立轻松日常联结；3.减少手机逃避，培养兴趣打破封闭；4.必要时寻求学校心理咨询支持。\n";
+  }
 
-  txt += "\n📊【假性亲密指数】" + s2 + "\n";
-  if (s2 <= 14) txt += "✅ 低假性亲密｜关系真实，敢于真诚\n";
-  else if (s2 <= 24) txt += "⚠️ 中度假性亲密｜习惯表面和谐\n";
-  else txt += "🔴 高假性亲密｜长期戴面具，难以信任\n";
+  txt += "\n📊【你的假性亲密指数】" + s2 + "（满分30分）\n";
+  if (s2 <= 12) {
+    txt += "✅ 低假性亲密状态｜你在交往中能够保持真诚，敢于展现真实的自己，不刻意迎合他人，能建立高质量深度关系。\n";
+    txt += "→ 心理发展建议：继续保持真诚，同时尊重他人边界，避免因过度真诚产生不必要的内耗。\n";
+  } else if (s2 <= 22) {
+    txt += "⚠️ 中度假性亲密状态｜你存在一定的表面社交倾向，偶尔会隐藏想法迎合他人，在集体中习惯用礼貌维持关系，内心存在距离感。\n";
+    txt += "→ 困境处理建议：1.减少无效社交，专注维系值得的关系；2.在信任的人面前尝试表达真实想法；3.不必强迫自己参与所有活动。\n";
+  } else {
+    txt += "🔴 高假性亲密状态｜你长期习惯社交伪装，内心高度设防，不愿暴露脆弱，害怕被伤害，关系大多停留在表面，难以建立深度联结。\n";
+    txt += "→ 困境处理建议：1.接纳自我保护的本能，不必自责；2.从微小情绪分享开始，逐步建立信任；3.减少功利社交，把精力留给自己；4.长期疲惫可寻求专业心理支持。\n";
+  }
 
-  txt += "\n💡【深度改善建议】\n";
-  txt += "1. 每周至少一次不带手机的深度聊天\n";
-  txt += "2. 情绪来临时试着表达，而不是独自压抑\n";
-  txt += "3. 拒绝无意义社交，把精力留给值得的人\n";
-  txt += "4. 允许自己不完美，允许别人靠近你\n";
-  txt += "5. 脆弱不是缺点，而是亲密关系的开始\n";
+  txt += "\n💡【大学生专属心理发展建议】\n";
+  txt += "1. 学习与社交平衡：不必追求完美社交，合理分配时间，每周保留1-2小时深度沟通。\n";
+  txt += "2. 善用校园资源：学校心理咨询中心可提供免费支持，兴趣社团是寻找同频伙伴的优质渠道。\n";
+  txt += "3. 调整认知：孤独与假性亲密都是成长中的正常现象，关键是正视自己的真实需求。\n";
+  txt += "4. 从小行动开始：每天做一件打破封闭的小事，逐步建立自然、舒适的情感联结。\n";
+  txt += "5. 关注自我成长：接纳自己的不完美，允许有困惑与情绪，在自我探索中成为更从容的自己。\n";
+
+  txt += "\n💌 致每一个努力的你：每一次自我探索，都在让你靠近更真实的自己。愿你在大学时光里，既能专注成长，也能拥有温暖真诚的关系，不必伪装，不必孤立，自在从容，闪闪发光✨";
 
   document.getElementById("score1").innerText = s1;
   document.getElementById("score2").innerText = s2;
@@ -440,7 +453,7 @@ function closeModal() {
 function saveReport() {
   html2canvas(document.getElementById("reportCard")).then(canvas => {
     const a = document.createElement("a");
-    a.download = "孤独与假性亲密报告.png";
+    a.download = "心理评估报告.png";
     a.href = canvas.toDataURL("image/png");
     a.click();
   });
